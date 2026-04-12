@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #output { background-color: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Test Login to Dashboard Flow</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Login</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginOutput"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Validate Token</h2>
+        <button onclick="testValidateToken()">Test Token Validation</button>
+        <div id="validateOutput"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Navigate to Dashboard</h2>
+        <button onclick="navigateToDashboard()">Go to Dashboard</button>
+        <div id="dashboardOutput"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Complete Flow Test</h2>
+        <button onclick="testCompleteFlow()">Test Complete Login Flow</button>
+        <div id="completeOutput"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let userInfo = null;
+
+        async function testLogin() {
+            const output = document.getElementById('loginOutput');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'newuser@example.com',
+                        password: 'NewPass123!'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    userInfo = {
+                        userId: data.userId,
+                        email: data.email,
+                        fullName: data.fullName,
+                        role: data.role
+                    };
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    
+                    output.innerHTML = `<div class="success">✅ Login successful!<br>Token: ${authToken.substring(0, 50)}...<br>User: ${data.fullName}</div>`;
+                } else {
+                    output.innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function testValidateToken() {
+            const output = document.getElementById('validateOutput');
+            
+            if (!authToken) {
+                output.innerHTML = `<div class="error">❌ No token available. Please login first.</div>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        token: authToken
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    output.innerHTML = `<div class="success">✅ Token validation successful!<br>User: ${data.fullName}<br>Role: ${data.role}</div>`;
+                } else {
+                    output.innerHTML = `<div class="error">❌ Token validation failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        function navigateToDashboard() {
+            const output = document.getElementById('dashboardOutput');
+            
+            if (!authToken) {
+                output.innerHTML = `<div class="error">❌ No token available. Please login first.</div>`;
+                return;
+            }
+            
+            output.innerHTML = `<div class="success">✅ Navigating to dashboard with stored token...</div>`;
+            setTimeout(() => {
+                window.location.href = '/api/dashboard';
+            }, 1000);
+        }
+
+        async function testCompleteFlow() {
+            const output = document.getElementById('completeOutput');
+            output.innerHTML = 'Starting complete flow test...\n';
+            
+            // Step 1: Login
+            output.innerHTML += '1. Testing login...\n';
+            try {
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'newuser@example.com',
+                        password: 'NewPass123!'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginData.success) {
+                    output.innerHTML += `❌ Login failed: ${loginData.message}\n`;
+                    return;
+                }
+                
+                authToken = loginData.token;
+                output.innerHTML += `✅ Login successful\n`;
+                
+                // Step 2: Validate token
+                output.innerHTML += '2. Validating token...\n';
+                const validateResponse = await fetch('/api/auth/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        token: authToken
+                    })
+                });
+                
+                const validateData = await validateResponse.json();
+                
+                if (!validateData.success) {
+                    output.innerHTML += `❌ Token validation failed: ${validateData.message}\n`;
+                    return;
+                }
+                
+                output.innerHTML += `✅ Token validation successful\n`;
+                
+                // Step 3: Store in localStorage and navigate
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('userInfo', JSON.stringify({
+                    userId: loginData.userId,
+                    email: loginData.email,
+                    fullName: loginData.fullName,
+                    role: loginData.role
+                }));
+                
+                output.innerHTML += '3. Stored auth data in localStorage\n';
+                output.innerHTML += '✅ Complete flow test successful!\n';
+                output.innerHTML += 'You can now navigate to the dashboard.\n';
+                
+            } catch (error) {
+                output.innerHTML += `❌ Error during flow test: ${error.message}\n`;
+            }
+        }
+
+        // Load existing token if available
+        window.onload = function() {
+            authToken = localStorage.getItem('authToken');
+            const storedUserInfo = localStorage.getItem('userInfo');
+            if (storedUserInfo) {
+                userInfo = JSON.parse(storedUserInfo);
+            }
+            
+            if (authToken && userInfo) {
+                document.getElementById('loginOutput').innerHTML = 
+                    `<div class="success">✅ Token found in storage<br>User: ${userInfo.fullName}</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

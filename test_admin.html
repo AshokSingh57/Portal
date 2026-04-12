@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin Delete</title>
+    <script>
+        let usersData = [
+            { id: '1', fullName: 'Test User', email: 'test@example.com', role: 'User' }
+        ];
+        
+        function deleteUser(userId, email) {
+            console.log('deleteUser called with:', userId, email);
+            if (!confirm(`Are you sure you want to delete user ${email}?`)) {
+                return;
+            }
+            
+            const userIndex = usersData.findIndex(user => user.id === userId);
+            console.log('User index found:', userIndex);
+            
+            if (userIndex !== -1) {
+                usersData.splice(userIndex, 1);
+                console.log('User deleted. Remaining users:', usersData.length);
+                alert(`User ${email} deleted successfully`);
+            } else {
+                alert(`User ${email} not found`);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Test Delete Function</h1>
+    <button onclick="deleteUser('1', 'test@example.com')">Delete Test User</button>
+    <button onclick="console.log('Current users:', usersData)">Show Users</button>
+</body>
+</html>

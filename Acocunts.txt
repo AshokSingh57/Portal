@@ -1,0 +1,4 @@
+User Accounts
+
+user email: admin@myexample.com, Full name:Joe Brown, Role: Admin, Password: Mynewcadillac1@
+Other user accounts with the same password
